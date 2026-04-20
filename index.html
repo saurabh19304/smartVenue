@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartVenue - AI Sports Assistant</title>
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"></script>
+    <style>
+        :root {
+            --bg: #09090b;
+            --card-bg: rgba(24, 24, 27, 0.65);
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
+            --accent: #0ea5e9;
+            --accent-glow: rgba(14, 165, 233, 0.5);
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            cursor: none !important;
+        }
+
+        body {
+            cursor: none;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.12), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.08), transparent 40%);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 2.5rem;
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 100;
+        }
+
+        header .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--red);
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 8px var(--red);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero-bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--accent);
+            filter: blur(2px);
+            opacity: 0.4;
+            z-index: 1;
+        }
+
+        .p1 {
+            width: 8px;
+            height: 8px;
+            top: 20%;
+            left: 15%;
+        }
+
+        .p2 {
+            width: 12px;
+            height: 12px;
+            top: 70%;
+            left: 80%;
+            background: var(--green);
+        }
+
+        .p3 {
+            width: 6px;
+            height: 6px;
+            top: 40%;
+            left: 70%;
+        }
+
+        .p4 {
+            width: 10px;
+            height: 10px;
+            top: 80%;
+            left: 25%;
+            background: var(--yellow);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            opacity: 0;
+        }
+
+        .glow-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .hero-title {
+            font-family: 'Clash Display', 'Playfair Display', sans-serif;
+            font-size: clamp(80px, 12vw, 150px);
+            font-weight: 800;
+            margin: 0;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-title .letter,
+        .hero-title .letter-accent {
+            display: inline-block;
+            transform-origin: center;
+            opacity: 1;
+        }
+
+        .hero-title .letter-accent {
+            color: var(--accent);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: #a1a1aa;
+            max-width: 500px;
+            margin: 0;
+            line-height: 1.5;
+            opacity: 0;
+        }
+
+        .hero-subtitle span {
+            display: inline-block;
+            opacity: 0.4;
+            font-weight: 400;
+        }
+
+        .hero-cta {
+            margin-top: 1rem;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            background: var(--accent);
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+            opacity: 0;
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.5);
+            background: #0284c7;
+        }
+
+        /* Dashboard Layout */
+        .dashboard-section {
+            min-height: 100vh;
+            padding-top: 80px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            align-items: start;
+            padding: 2rem;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-width: 0;
+        }
+
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            min-width: 0;
+        }
+
+        .analytics-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 1rem;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            text-align: center;
+            border-left-width: 4px;
+        }
+
+        .stat-box:nth-child(1) {
+            border-left-color: var(--accent);
+        }
+
+        .stat-box:nth-child(2) {
+            border-left-color: var(--green);
+        }
+
+        .stat-box:nth-child(3) {
+            border-left-color: var(--yellow);
+        }
+
+        .stat-box:nth-child(4) {
+            border-left-color: var(--red);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 1.5rem;
+            padding: 1.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .map-card {
+            flex: 1.1;
+        }
+
+        .wait-times-card {
+            flex: 0.9;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .map-container {
+            flex: 1;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            position: relative;
+            padding: 1rem;
+        }
+
+        .map-container svg {
+            width: 100%;
+            height: 100%;
+            max-height: 100%;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5));
+        }
+
+        .card-title svg {
+            flex-shrink: 0;
+        }
+
+        .wait-grid-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .wait-time-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1rem;
+            transition: transform 0.2s ease, background 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .wait-time-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .wait-time-card.warning-card {
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.05);
+            animation: pulseWarning 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseWarning {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+            70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .warning-icon {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 1.1em;
+            vertical-align: text-top;
+        }
+
+        .wait-time-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .wait-progress-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .wait-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 1024px) {
+            .wait-grid-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .wait-grid-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a1a1aa;
+            padding: 0.4rem 1.2rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .filter-tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .chat-card {
+            flex: 1;
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            padding-right: 0.5rem;
+            margin-bottom: 1.5rem;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .msg {
+            max-width: 85%;
+            padding: 1rem 1.25rem;
+            border-radius: 1.25rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .msg.ai {
+            background: rgba(14, 165, 233, 0.1);
+            color: #e0f2fe;
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+            border: 1px solid rgba(14, 165, 233, 0.2);
+        }
+
+        .msg.user {
+            background: var(--accent);
+            color: #ffffff;
+            font-weight: 500;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: border-color 0.3s;
+        }
+
+        .chat-input-wrapper:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+        }
+
+        .chat-input-wrapper input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .chat-input-wrapper input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .chat-input-wrapper button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 0.75rem;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-input-wrapper button:hover {
+            transform: scale(1.05) translateY(-1px);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+            padding: 1rem 1.25rem;
+            background: rgba(14, 165, 233, 0.05);
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            border-radius: 1.25rem;
+            width: fit-content;
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: typing 1s infinite alternate;
+            opacity: 0.6;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+
+            100% {
+                transform: translateY(-5px);
+                opacity: 1;
+            }
+        }
+
+        /* SVG internal styling */
+        .section-path {
+            transition: fill 0.8s ease-in-out;
+            stroke: #ffffff;
+            stroke-width: 2;
+        }
+
+        .section-path:hover {
+            filter: brightness(1.2);
+            cursor: pointer;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: 0 0 5px currentColor;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                overflow-y: auto;
+            }
+
+            .chat-card {
+                min-height: 500px;
+            }
+
+            .map-card {
+                aspect-ratio: 16/9;
+            }
+        }
+
+        /* Custom Cursor */
+        .cursor-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 28px;
+            height: 28px;
+            pointer-events: none;
+            z-index: 9999;
+            border-radius: 50%;
+            mix-blend-mode: screen;
+            background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(14, 165, 233, 0.8) 40%, rgba(14, 165, 233, 0.2) 70%, transparent 100%);
+            transform: translate(-50%, -50%);
+        }
+
+        #crowdChart {
+            height: 200px !important;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cursor-glow" id="cursor-glow"></div>
+
+    <header>
+        <div class="logo">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="var(--accent)">
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+            </svg>
+            Smart<span>Venue</span>
+        </div>
+        <div class="status">
+            <span class="live-indicator"></span>
+            Live Updates Active
+        </div>
+    </header>
+
+    <div class="hero">
+        <div class="hero-bg-grid"></div>
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+        <div class="particle p4"></div>
+        <div class="hero-content">
+            <div class="badge"><span class="glow-dot"></span>POWERED BY AI</div>
+            <h1 class="hero-title">
+                <span class="letter">S</span><span class="letter">m</span><span class="letter">a</span><span
+                    class="letter">r</span><span class="letter">t</span><span class="letter-accent">V</span><span
+                    class="letter-accent">e</span><span class="letter-accent">n</span><span
+                    class="letter-accent">u</span><span class="letter-accent">e</span>
+            </h1>
+            <p class="hero-subtitle">
+                <span>Real-time</span> <span>crowd</span> <span>intelligence</span> <span>for</span> <span>the</span>
+                <span>modern</span> <span>stadium</span> <span>experience</span>
+            </p>
+            <button class="hero-cta"
+                onclick="document.getElementById('dashboard').scrollIntoView({behavior: 'smooth'})">View Live
+                Dashboard</button>
+        </div>
+    </div>
+
+    <div id="dashboard" class="dashboard-section">
+        <main class="main-content">
+            <div class="left-col">
+                <div class="card map-card">
+                    <div class="card-title">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path d="M12 2L2 22h20L12 2z" />
+                        </svg>
+                        Live Crowd Density
+                    </div>
+                    <div class="map-container">
+                        <svg viewBox="0 0 400 300">
+                            <!-- North -->
+                            <path id="sec-North" class="section-path"
+                                d="M 115.15 65.15 A 120 120 0 0 1 284.85 65.15 L 249.5 100.5 A 70 70 0 0 0 150.5 100.5 Z"
+                                fill="#10b981" />
+                            <!-- East -->
+                            <path id="sec-East" class="section-path"
+                                d="M 284.85 65.15 A 120 120 0 0 1 284.85 234.85 L 249.5 199.5 A 70 70 0 0 0 249.5 100.5 Z"
+                                fill="#ef4444" />
+                            <!-- South -->
+                            <path id="sec-South" class="section-path"
+                                d="M 284.85 234.85 A 120 120 0 0 1 115.15 234.85 L 150.5 199.5 A 70 70 0 0 0 249.5 199.5 Z"
+                                fill="#f59e0b" />
+                            <!-- West -->
+                            <path id="sec-West" class="section-path"
+                                d="M 115.15 234.85 A 120 120 0 0 1 115.15 65.15 L 150.5 100.5 A 70 70 0 0 0 150.5 199.5 Z"
+                                fill="#10b981" />
+
+                            <!-- Field / Pitch -->
+                            <circle cx="200" cy="150" r="70" fill="#064e3b" stroke="rgba(255,255,255,0.3)"
+                                stroke-width="2" />
+                            <line x1="200" y1="80" x2="200" y2="220" stroke="rgba(255,255,255,0.3)" stroke-width="2" />
+                            <circle cx="200" cy="150" r="20" fill="none" stroke="rgba(255,255,255,0.3)"
+                                stroke-width="2" />
+                            <circle cx="200" cy="150" r="3" fill="rgba(255,255,255,0.8)" />
+                            <!-- Penalty Areas -->
+                            <rect x="150" y="120" width="15" height="60" fill="none" stroke="rgba(255,255,255,0.3)"
+                                stroke-width="1.5" />
+                            <rect x="235" y="120" width="15" height="60" fill="none" stroke="rgba(255,255,255,0.3)"
+                                stroke-width="1.5" />
+
+                            <!-- Section Labels -->
+                            <text x="200" y="55" fill="white" font-size="14" font-weight="700" text-anchor="middle"
+                                letter-spacing="0.1em">NORTH</text>
+                            <text x="200" y="255" fill="white" font-size="14" font-weight="700" text-anchor="middle"
+                                letter-spacing="0.1em">SOUTH</text>
+                            <text x="60" y="155" fill="white" font-size="14" font-weight="700" text-anchor="middle"
+                                letter-spacing="0.1em" transform="rotate(-90 60,150)">WEST</text>
+                            <text x="340" y="155" fill="white" font-size="14" font-weight="700" text-anchor="middle"
+                                letter-spacing="0.1em" transform="rotate(90 340,150)">EAST</text>
+                        </svg>
+
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background: var(--green); color: var(--green)"></div> Low
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background: var(--yellow); color: var(--yellow)"></div>
+                                Medium
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background: var(--red); color: var(--red)"></div> High
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card wait-times-card">
+                    <div class="card-title">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path
+                                d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                        </svg>
+                        Real-Time Wait Times
+                    </div>
+                    <div class="filter-tabs" style="justify-content: space-between;">
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="filter-tab active" data-filter="all">All</button>
+                            <button class="filter-tab" data-filter="gate">Gates</button>
+                            <button class="filter-tab" data-filter="food">Food</button>
+                            <button class="filter-tab" data-filter="restroom">Restrooms</button>
+                        </div>
+                        <input type="text" id="search-wait-times" class="filter-tab" placeholder="Search location..." style="background: rgba(0,0,0,0.3); outline: none; width: 180px; text-align: left; cursor: text; font-family: inherit;">
+                    </div>
+                    <div class="wait-grid-cards">
+                        <div class="wait-time-card" data-category="gate">
+                            <div class="wait-time-header">
+                                <span>Gate A</span>
+                                <span style="color:var(--yellow); font-weight:700;">15 min</span>
+                            </div>
+                            <div class="wait-progress-bg">
+                                <div class="wait-progress-fill" style="width: 50%; background: var(--yellow);"></div>
+                            </div>
+                        </div>
+                        <div class="wait-time-card" data-category="gate">
+                            <div class="wait-time-header">
+                                <span>Gate B</span>
+                                <span style="color:var(--red); font-weight:700;">22 min</span>
+                            </div>
+                            <div class="wait-progress-bg">
+                                <div class="wait-progress-fill" style="width: 73%; background: var(--red);"></div>
+                            </div>
+                        </div>
+                        <div class="wait-time-card" data-category="gate">
+                            <div class="wait-time-header">
+                                <span>Gate C</span>
+                                <span style="color:var(--green); font-weight:700;">8 min</span>
+                            </div>
+                            <div class="wait-progress-bg">
+                                <div class="wait-progress-fill" style="width: 26%; background: var(--green);"></div>
+                            </div>
+                        </div>
+                        <div class="wait-time-card" data-category="food">
+                            <div class="wait-time-header">
+                                <span>Pizza Stand</span>
+                                <span style="color:var(--yellow); font-weight:700;">12 min</span>
+                            </div>
+                            <div class="wait-progress-bg">
+                                <div class="wait-progress-fill" style="width: 40%; background: var(--yellow);"></div>
+                            </div>
+                        </div>
+                        <div class="wait-time-card" data-category="food">
+                            <div class="wait-time-header">
+                                <span>Burger Counter</span>
+                                <span style="color:var(--red); font-weight:700;">18 min</span>
+                            </div>
+                            <div class="wait-progress-bg">
+                                <div class="wait-progress-fill" style="width: 60%; background: var(--red);"></div>
+                            </div>
+                        </div>
+                        <div class="wait-time-card" data-category="restroom">
+                            <div class="wait-time-header">
+                                <span>Restroom 101</span>
+                                <span style="color:var(--green); font-weight:700;">4 min</span>
+                            </div>
+                            <div class="wait-progress-bg">
+                                <div class="wait-progress-fill" style="width: 13%; background: var(--green);"></div>
+                            </div>
+                        </div>
+                        <div class="wait-time-card" data-category="restroom">
+                            <div class="wait-time-header">
+                                <span>Restroom 205</span>
+                                <span style="color:var(--green); font-weight:700;">6 min</span>
+                            </div>
+                            <div class="wait-progress-bg">
+                                <div class="wait-progress-fill" style="width: 20%; background: var(--green);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="last-updated-text" style="text-align: right; margin-top: 1rem; font-size: 0.8rem; color: #a1a1aa; font-family: monospace;">
+                        Last Updated: --:--:--
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-col">
+                <div class="card analytics-card">
+                    <div class="card-title">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
+                        </svg>
+                        Live Analytics Panel
+                    </div>
+                    <div style="height: 1rem;"></div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Total Attendees</div>
+                            <div class="stat-value">42,847</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Active Gates</div>
+                            <div class="stat-value">3 / 4</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Avg Wait Time</div>
+                            <div class="stat-value" id="avg-wait-time">-- min</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Peak Section</div>
+                            <div class="stat-value" id="peak-section">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card chat-card">
+                    <div class="card-title">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                            <path
+                                d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM9 11H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z" />
+                        </svg>
+                        Venue AI Assistant
+                    </div>
+                    <div class="chat-box" id="chat-box">
+                        <div class="msg ai">Welcome to SmartVenue! 🏟️<br><br>I can help you navigate the stadium and
+                            skip the lines. Try asking me:<br><br>• <i>"Which gate is least crowded?"</i><br>• <i>"Where
+                                is the shortest line for food?"</i><br>• <i>"Closest restroom?"</i></div>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <input type="text" id="chat-input" placeholder="Ask about wait times or locations..."
+                            autocomplete="off">
+                        <button id="send-btn" aria-label="Send message">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- Mock Data Models ---
+        const data = {
+            'Entrance Gates': { 'Gate A (North)': 15, 'Gate B (East)': 4, 'Gate C (South)': 22, 'Gate D (West)': 8 },
+            'Food & Beverage': { 'Burger Stand': 12, 'Pizza Hut': 18, 'Beer Tent': 5, 'Hot Dogs': 9 },
+            'Restrooms': { 'Section 101': 2, 'Section 115': 14, 'Section 205': 6, 'Section 310': 3 }
+        };
+
+        const mapData = {
+            North: 45,
+            South: 85,
+            East: 60,
+            West: 30
+        };
+
+        // --- Utility Functions ---
+        const getColorClass = (val) => val > 15 ? 'time-red' : val > 8 ? 'time-yellow' : 'time-green';
+        const getColorHex = (val) => val > 75 ? '#ef4444' : val > 40 ? '#f59e0b' : '#10b981';
+
+        // --- Core Logic ---
+        function updateMockData() {
+            // Add random walk to dashboard data
+            let totalWait = 0, count = 0;
+            for (const cat in data) {
+                for (const item in data[cat]) {
+                    let change = Math.floor(Math.random() * 5) - 2; // -2 to +2
+                    data[cat][item] = Math.max(1, Math.min(45, data[cat][item] + change));
+                    totalWait += data[cat][item];
+                    count++;
+                }
+            }
+
+            // Add random walk to map density data
+            let peakName = 'South';
+            let peakValue = 0;
+            for (const sec in mapData) {
+                let change = Math.floor(Math.random() * 11) - 5; // -5 to +5
+                mapData[sec] = Math.max(10, Math.min(100, mapData[sec] + change));
+
+                // Animate SVG colors dynamically
+                const el = document.getElementById('sec-' + sec);
+                if (el) el.setAttribute('fill', getColorHex(mapData[sec]));
+
+                if (mapData[sec] > peakValue) {
+                    peakValue = mapData[sec];
+                    peakName = sec;
+                }
+            }
+
+
+            // Update stats
+            const avgEl = document.getElementById('avg-wait-time');
+            if (avgEl) avgEl.innerText = Math.round(totalWait / count) + ' min';
+            const peakEl = document.getElementById('peak-section');
+            if (peakEl) peakEl.innerText = peakName;
+        }
+
+        // --- AI Chatbot Logic ---
+        const chatBox = document.getElementById('chat-box');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        function appendMessage(text, sender) {
+            const typing = document.getElementById('typing');
+            if (typing) typing.remove();
+
+            const msg = document.createElement('div');
+            msg.className = `msg ${sender}`;
+            msg.innerHTML = text; // parse basic formatting
+            chatBox.appendChild(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showTyping() {
+            const typing = document.createElement('div');
+            typing.id = 'typing';
+            typing.className = 'typing-indicator';
+            typing.innerHTML = '<span></span><span></span><span></span>';
+            chatBox.appendChild(typing);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function getBestOption(category) {
+            let bestName = '';
+            let bestTime = Infinity;
+            for (const [name, time] of Object.entries(data[category])) {
+                if (time < bestTime) {
+                    bestTime = time;
+                    bestName = name;
+                }
+            }
+            return { name: bestName, time: bestTime };
+        }
+
+        function getLeastCrowdedSection() {
+            let bestName = '';
+            let bestDensity = Infinity;
+            for (const [name, density] of Object.entries(mapData)) {
+                if (density < bestDensity) {
+                    bestDensity = density;
+                    bestName = name;
+                }
+            }
+            return { name: bestName, density: bestDensity };
+        }
+
+        function handleChat() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, 'user');
+            chatInput.value = '';
+            showTyping();
+
+            // Simulate network latency for AI thinking
+            setTimeout(() => {
+                const lowerText = text.toLowerCase();
+                let response = "I'm not quite sure. Try asking me about **gates**, **food**, **restrooms**, or **crowds**!";
+
+                if (lowerText.includes('gate') || lowerText.includes('entrance') || lowerText.includes('enter')) {
+                    const best = getBestOption('Entrance Gates');
+                    response = `To get in quickly, head to **${best.name}**. The wait is currently only **${best.time} minutes**.`;
+                } else if (lowerText.includes('food') || lowerText.includes('hungry') || lowerText.includes('eat') || lowerText.includes('drink') || lowerText.includes('beer')) {
+                    const best = getBestOption('Food & Beverage');
+                    response = `The shortest line for concessions right now is at the **${best.name}** with a **${best.time} minute** wait.`;
+                } else if (lowerText.includes('restroom') || lowerText.includes('bathroom') || lowerText.includes('toilet') || lowerText.includes('washroom')) {
+                    const best = getBestOption('Restrooms');
+                    response = `The closest restroom with the shortest line is at **${best.name}** (approx **${best.time} min** wait).`;
+                } else if (lowerText.includes('section') || lowerText.includes('crowd') || lowerText.includes('seat')) {
+                    const best = getLeastCrowdedSection();
+                    response = `The **${best.name}** section is currently the least crowded at roughly **${best.density}% capacity**.`;
+                } else if (lowerText.includes('hi') || lowerText.includes('hello') || lowerText.includes('hey')) {
+                    response = "Hello! I'm here to help you navigate the stadium and avoid lines. What are you looking for?";
+                } else if (lowerText.includes('wait') || lowerText.includes('time')) {
+                    const bestGate = getBestOption('Entrance Gates');
+                    const bestFood = getBestOption('Food & Beverage');
+                    response = `Wait times are looking good! The quickest gate is **${bestGate.name}** (${bestGate.time}m), and the quickest food is **${bestFood.name}** (${bestFood.time}m).`;
+                }
+
+                // Format bold text
+                response = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                const typing = document.getElementById('typing');
+                if (typing) typing.remove();
+
+                const msg = document.createElement('div');
+                msg.className = `msg ai`;
+                const span = document.createElement('span');
+                msg.appendChild(span);
+                chatBox.appendChild(msg);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                new Typed(span, {
+                    strings: [response],
+                    typeSpeed: 25,
+                    showCursor: false,
+                    onComplete: (self) => {
+                        self.destroy();
+                        span.innerHTML = response;
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+                });
+            }, 800 + Math.random() * 800);
+        }
+
+        // Event Listeners
+        sendBtn.addEventListener('click', handleChat);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleChat();
+        });
+
+        // GSAP Animations
+        gsap.to(".badge", { opacity: 1, duration: 0.8, delay: 0.2, ease: "power2.out" });
+
+        // Title Entrance
+        gsap.fromTo(".hero-title span",
+            { scale: 2, filter: "blur(20px)", opacity: 0, y: 50 },
+            { scale: 1, filter: "blur(0px)", opacity: 1, y: 0, duration: 1.2, stagger: 0.06, ease: "expo.out", delay: 0.3 }
+        );
+
+        // Title Hover Logic
+        const letters = Array.from(document.querySelectorAll('.hero-title span'));
+        letters.forEach((letter, index) => {
+            letter.addEventListener('mouseenter', () => {
+                letters.forEach((l, i) => {
+                    if (i === index) {
+                        gsap.to(l, { scale: 1.3, color: "#0ea5e9", fontWeight: 900, opacity: 1, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+                    } else if (i === index - 1 || i === index + 1) {
+                        const isAccent = l.classList.contains('letter-accent');
+                        gsap.to(l, { scale: 1.1, color: isAccent ? "var(--accent)" : "var(--text)", fontWeight: 800, opacity: 0.7, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+                    } else {
+                        const isAccent = l.classList.contains('letter-accent');
+                        gsap.to(l, { scale: 1, color: isAccent ? "var(--accent)" : "var(--text)", fontWeight: 800, opacity: 0.4, duration: 0.3, ease: "power2.out", overwrite: "auto" });
+                    }
+                });
+            });
+            letter.addEventListener('mouseleave', () => {
+                letters.forEach(l => {
+                    const isAccent = l.classList.contains('letter-accent');
+                    gsap.to(l, { scale: 1, color: isAccent ? "var(--accent)" : "var(--text)", fontWeight: 800, opacity: 1, duration: 0.6, ease: "power2.out", overwrite: "auto" });
+                });
+            });
+        });
+
+        // Subtitle Entrance & Hover
+        gsap.to(".hero-subtitle", { opacity: 1, y: -10, duration: 0.8, delay: 0.8, ease: "power2.out" });
+
+        const subtitle = document.querySelector('.hero-subtitle');
+        const subtitleWords = subtitle.querySelectorAll('span');
+        subtitle.addEventListener('mouseenter', () => {
+            gsap.to(subtitleWords, { opacity: 1, fontWeight: 700, stagger: 0.05, duration: 0.3, overwrite: "auto" });
+        });
+        subtitle.addEventListener('mouseleave', () => {
+            gsap.to(subtitleWords, { opacity: 0.4, fontWeight: 400, stagger: 0.05, duration: 0.3, overwrite: "auto" });
+        });
+
+        gsap.to(".hero-cta", { opacity: 1, y: -10, duration: 0.8, delay: 1, ease: "power2.out" });
+
+        // Glow Cursor Logic
+        const cursorGlow = document.getElementById('cursor-glow');
+
+        let glowXTo = gsap.quickTo(cursorGlow, "left", { duration: 0.08, ease: "power3" });
+        let glowYTo = gsap.quickTo(cursorGlow, "top", { duration: 0.08, ease: "power3" });
+
+        let lastGlowTime = 0;
+        const glowClones = [];
+
+        const moveCursor = (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+
+            glowXTo(x);
+            glowYTo(y);
+
+            // Trail Effect Throttled (40ms)
+            const now = Date.now();
+            if (now - lastGlowTime > 40) {
+                lastGlowTime = now;
+                const clone = document.createElement('div');
+                clone.className = 'cursor-glow';
+                clone.style.left = x + 'px';
+                clone.style.top = y + 'px';
+                document.body.appendChild(clone);
+
+                glowClones.push(clone);
+
+                if (glowClones.length > 8) {
+                    const oldest = glowClones.shift();
+                    gsap.killTweensOf(oldest);
+                    oldest.remove();
+                }
+
+                gsap.fromTo(clone,
+                    { opacity: 0.8, scale: 1 },
+                    {
+                        opacity: 0, scale: 0.2, duration: 0.5, ease: "power2.out", onComplete: () => {
+                            const index = glowClones.indexOf(clone);
+                            if (index > -1) glowClones.splice(index, 1);
+                            clone.remove();
+                        }
+                    }
+                );
+            }
+        };
+
+        window.addEventListener('mousemove', moveCursor);
+
+        // Hover state for glow
+        const clickables = document.querySelectorAll('button, a, .section-path');
+        clickables.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                gsap.to(cursorGlow, {
+                    scale: 2.5,
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.3) 60%, transparent 100%)',
+                    duration: 0.2,
+                    ease: "power2.out",
+                    overwrite: "auto"
+                });
+            });
+            el.addEventListener('mouseleave', () => {
+                gsap.to(cursorGlow, {
+                    scale: 1,
+                    background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(14,165,233,0.8) 40%, rgba(14,165,233,0.2) 70%, transparent 100%)',
+                    duration: 0.2,
+                    ease: "power2.out",
+                    overwrite: "auto"
+                });
+            });
+        });
+
+        window.addEventListener('unload', () => {
+            window.removeEventListener('mousemove', moveCursor);
+            gsap.killTweensOf("*");
+        });
+
+
+        // Floating particles
+        gsap.to(".particle", {
+            y: "random(-20, 20)",
+            x: "random(-20, 20)",
+            duration: "random(3, 6)",
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut"
+        });
+
+        // Filter and Search Logic
+        let currentFilter = 'all';
+        const searchInput = document.getElementById('search-wait-times');
+
+        document.querySelectorAll('.filter-tab[data-filter]').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-tab[data-filter]').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.getAttribute('data-filter');
+                applyFilters();
+            });
+        });
+
+        if (searchInput) {
+            searchInput.addEventListener('input', applyFilters);
+        }
+
+        function applyFilters() {
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+            document.querySelectorAll('.wait-time-card').forEach(card => {
+                const category = card.getAttribute('data-category');
+                const name = card.querySelector('.wait-time-header span').innerText.toLowerCase();
+                
+                const matchesCategory = (currentFilter === 'all' || category === currentFilter);
+                const matchesSearch = name.includes(searchTerm);
+
+                if (matchesCategory && matchesSearch) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Highlight High Wait Times (> 20 min)
+        document.querySelectorAll('.wait-time-card').forEach(card => {
+            const timeSpan = card.querySelector('.wait-time-header span:nth-child(2)');
+            const timeVal = parseInt(timeSpan.innerText);
+            if (timeVal > 20) {
+                card.classList.add('warning-card');
+                timeSpan.innerHTML += ' <span class="warning-icon">⚠</span>';
+            }
+        });
+
+        // Last Updated Time Loop
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const el = document.getElementById('last-updated-text');
+            if (el) el.innerText = `Last Updated: ${timeString}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Initialize and setup interval
+        updateMockData();
+        setInterval(updateMockData, 4000);
+    </script>
+</body>
+
+</html>
